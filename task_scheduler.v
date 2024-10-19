@@ -1,20 +1,23 @@
 module task_scheduler(
-    input clk,               // Clock signal
-    input reset,             // Reset signal
-    input [2:0] task_priority, // Priority of incoming task (0 to 3)
-    input [7:0] task_duration, // Execution time of incoming task (in clock cycles)
-    output reg [3:0] core_busy, // Core busy status (1 if core is busy, 0 if free)
-    output reg [7:0] core_task_time[3:0]  // Remaining execution time for each core
+    input clk,                        // Clock signal
+    input reset,                      // Reset signal
+    input [2:0] task_priority,        // Priority of incoming task (0 to 3)
+    input [7:0] task_duration,        // Execution time of incoming task (in clock cycles)
+    output reg [3:0] core_busy,       // Core busy status (1 if core is busy, 0 if free)
+    output reg [7:0] core_task_time_0,  // Remaining execution time for core 0
+    output reg [7:0] core_task_time_1,  // Remaining execution time for core 1
+    output reg [7:0] core_task_time_2,  // Remaining execution time for core 2
+    output reg [7:0] core_task_time_3   // Remaining execution time for core 3
 );
 
 // Task queue for each priority level
-reg [7:0] task_queue [3:0][15:0]; // 4 priority levels, each with space for 16 tasks
-reg [3:0] queue_head [3:0]; // Head of each task queue
-reg [3:0] queue_tail [3:0]; // Tail of each task queue
+reg [7:0] task_queue [3:0][15:0];    // 4 priority levels, each with space for 16 tasks
+reg [3:0] queue_head [3:0];          // Head index for each task queue
+reg [3:0] queue_tail [3:0];          // Tail index for each task queue
 
-// Core status: 1 if core is busy, 0 if free
-reg [3:0] core_status;
-reg [7:0] core_time_remaining [3:0]; // Time remaining for task on each core
+// Core status and remaining time
+reg [3:0] core_status;                // 1 if core is busy, 0 if free
+reg [7:0] core_time_remaining [3:0];  // Time remaining for task on each core
 
 integer i;
 
@@ -41,15 +44,16 @@ always @(posedge clk or posedge reset) begin
     end
 end
 
-// Enqueue task in priority queue
-task enqueue_task(input [2:0] priority, input [7:0] duration);
-    begin
-        task_queue[priority][queue_tail[priority]] <= duration;
-        queue_tail[priority] <= queue_tail[priority] + 1;
+// Handle task arrivals and enqueue them
+always @(posedge clk) begin
+    // Enqueue incoming task if there's space in the corresponding priority queue
+    if (task_priority < 4 && queue_tail[task_priority] < 16) begin
+        task_queue[task_priority][queue_tail[task_priority]] <= task_duration;
+        queue_tail[task_priority] <= queue_tail[task_priority] + 1;
     end
-endtask
+end
 
-// Assign tasks to available cores
+// Assign tasks to available cores based on priority
 always @(posedge clk) begin
     for (i = 0; i < 4; i = i + 1) begin
         if (!core_status[i]) begin // If core is free
@@ -78,9 +82,12 @@ always @(posedge clk) begin
     end
 end
 
-// Task arrival handler
-always @(task_priority or task_duration) begin
-    enqueue_task(task_priority, task_duration);
+// Assign core task time outputs
+always @(posedge clk) begin
+    core_task_time_0 <= core_time_remaining[0];
+    core_task_time_1 <= core_time_remaining[1];
+    core_task_time_2 <= core_time_remaining[2];
+    core_task_time_3 <= core_time_remaining[3];
 end
 
 endmodule
