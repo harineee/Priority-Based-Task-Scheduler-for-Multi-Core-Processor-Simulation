@@ -1,12 +1,10 @@
 # Priority-Based-Task-Scheduler-for-Multi-Core-Processor-Simulation
 
-Here’s a README for your EDA Playground project, which explains the functionality and how to interact with the task scheduler module.
-
 ---
 
 # Task Scheduler in Verilog
 
-This EDA Playground project implements a **Task Scheduler** in Verilog that simulates task assignment to multiple processing cores. The scheduler assigns tasks based on priority and ensures that tasks are executed on free cores when available. The design supports different task priorities and handles task execution based on their duration.
+This EDA Playground project implements a **Task Scheduler** in Verilog that simulates task assignments to multiple processing cores. The scheduler assigns tasks based on priority and ensures that tasks are executed on free cores when available. The design supports different task priorities and handles task execution based on their duration.
 
 ## Project Link
 
